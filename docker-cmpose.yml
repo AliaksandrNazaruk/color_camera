@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  color_camera_service:
+    container_name: color_camera_service
+    build: .
+    restart: always
+    ports:
+      - "8104:8104"
+    devices:
+      - "/dev/rgb_cam:/dev/rgb_cam"
+      - "/dev/video0:/dev/video0"
+      - "/dev/video1:/dev/video1"
+      - "/dev/video2:/dev/video2"
+      - "/dev/video3:/dev/video3"
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+      - /home/boris/projects/librealsense/build/release/pyrealsense2.cpython-312-aarch64-linux-gnu.so:/usr/local/lib/python3.11/site-packages/pyrealsense2.cpython-312-aarch64-linux-gnu.so:ro
+    environment:
+      SERVICE_HOST: "0.0.0.0"
+      SERVICE_PORT: "8104"
+    network_mode: host
+    privileged: true
+    group_add:
+      - video
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8104/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

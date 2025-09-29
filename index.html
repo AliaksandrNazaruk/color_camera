@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Camera WebRTC Client</title>
+  <link rel="stylesheet" href="/static/styles.css?v=9" />
+  <link rel="stylesheet" href="/api/v1/color_camera/static/styles.css?v=9" />
+</head>
+<body>
+  <div id="media">
+    <!-- Settings toggle -->
+    <button id="settings-toggle">⚙️</button>
+
+    <!-- Connection controls -->
+    <div id="connection-controls">
+      <button id="close-connection-btn" class="control-btn" disabled>❌ Close</button>
+    </div>
+
+    <!-- Video & audio -->
+    <video id="video" autoplay playsinline muted></video>
+    <audio id="audio" autoplay hidden></audio>
+
+    <!-- Overlay UI -->
+    <button id="play-btn">▶</button>
+    
+    <!-- Connection progress -->
+    <div id="connection-progress">
+      <svg class="progress-ring">
+        <circle class="progress-ring-circle" cx="60" cy="60" r="60"></circle>
+      </svg>
+      <div class="progress-text">
+        <div id="progress-percent">0%</div>
+        <div id="progress-status">Connecting...</div>
+      </div>
+    </div>
+    
+    <div id="spinner"><div class="loader"></div></div>
+
+    <!-- Settings panel -->
+    <div id="settings-panel" class="hidden">
+      <h3>ICE / TURN Settings</h3>
+      <div class="row">
+        <label><input type="checkbox" id="use-turn"> Use TURN</label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="relay-only"> Relay only</label>
+      </div>
+      <div class="row">
+        <label>URLs</label>
+        <textarea id="urls" placeholder="stun:stun.l.google.com:19302, turn:your-turn-server.com:3478"></textarea>
+      </div>
+      <div class="row">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="your_turn_username" />
+      </div>
+      <div class="row">
+        <label>Password</label>
+        <input type="password" id="credential" placeholder="your_turn_password" />
+      </div>
+      <div class="actions">
+        <button id="load-ice">Load</button>
+        <button id="save-ice">Save</button>
+      </div>
+      <div id="ice-status" class="note"></div>
+    </div>
+  </div>
+
+  <script src="/static/client.js?v=12"></script>
+  <script src="/api/v1/color_camera/static/client.js?v=12"></script>
+  <script>
+    // client уже объявлен в client.js, используем его
+
+    // Дебаунсинг для кнопок подключения
+    let connectTimeout = null;
+    
+    function debouncedConnect(mode) {
+      if (connectTimeout) {
+        clearTimeout(connectTimeout);
+      }
+      connectTimeout = setTimeout(() => {
+        client.connect(mode);
+      }, 300); // 300ms задержка
+    }
+
+    // Play button - подключается в режиме color
+    document.getElementById("play-btn").onclick = () => {
+      const playBtn = document.getElementById("play-btn");
+      playBtn.disabled = true; // Отключаем кнопку сразу
+      playBtn.style.opacity = "0.5";
+      playBtn.style.cursor = "not-allowed";
+      
+      client.connect("color").finally(() => {
+        // Восстанавливаем кнопку только если подключение не удалось
+        if (!client.pc || client.pc.connectionState !== "connected") {
+          playBtn.disabled = false;
+          playBtn.style.opacity = "1";
+          playBtn.style.cursor = "pointer";
+        }
+      });
+    };
+
+    // ТЕСТ: Кнопка для проверки прогресс-бара
+    window.testProgress = () => {
+      console.log("Testing progress bar...");
+      const progressBar = document.getElementById("connection-progress");
+      if (progressBar) {
+        progressBar.style.display = "block";
+        progressBar.classList.add('show');
+        client._startProgressAnimation();
+      } else {
+        console.error("Progress bar not found!");
+      }
+    };
+    
+    // Function to get connection statistics
+    window.getStats = () => {
+      return client.getConnectionStats();
+    };
+    
+    // Function to check ICE configuration
+    window.checkIceConfig = async () => {
+      try {
+        const config = await client.fetchIceConfig();
+        console.log("Current ICE Configuration:", config);
+        return config;
+      } catch (error) {
+        console.error("Failed to fetch ICE config:", error);
+      }
+    };
+
+    // Close button
+    document.getElementById("close-connection-btn").onclick = () => client.manualClose();
+
+    // Settings button
+    document.getElementById("settings-toggle").onclick = () => {
+      const panel = document.getElementById("settings-panel");
+      panel.classList.toggle("hidden");
+    };
+
+    // Settings panel buttons
+    document.getElementById("load-ice").onclick = async () => {
+      try {
+        const config = await client.fetchIceConfig();
+        const server = config.iceServers[0];
+        if (server) {
+          // URLs может быть массивом или строкой
+          const urls = Array.isArray(server.urls) ? server.urls.join(', ') : server.urls || "";
+          document.getElementById("urls").value = urls;
+          document.getElementById("username").value = server.username || "";
+          document.getElementById("credential").value = server.credential || "";
+          document.getElementById("ice-status").textContent = "ICE config loaded";
+        } else {
+          document.getElementById("ice-status").textContent = "No ICE servers found";
+        }
+      } catch (e) {
+        console.error("Failed to load ICE config:", e);
+        document.getElementById("ice-status").textContent = "Failed to load ICE config: " + e.message;
+      }
+    };
+
+    document.getElementById("save-ice").onclick = async () => {
+      try {
+        const urlsValue = document.getElementById("urls").value.trim();
+        const urls = urlsValue ? urlsValue.split(',').map(s => s.trim()).filter(s => s) : [];
+        
+        const config = {
+          urls: urls,
+          username: document.getElementById("username").value.trim(),
+          credential: document.getElementById("credential").value.trim(),
+          relay_only: document.getElementById("relay-only").checked
+        };
+        
+        console.log("Saving ICE config:", config);
+        
+        const baseUrl = client.getBaseUrl();
+        const response = await fetch(`${baseUrl}/ice_config`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(config)
+        });
+        
+        if (response.ok) {
+          document.getElementById("ice-status").textContent = "ICE config saved successfully";
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (e) {
+        console.error("Failed to save ICE config:", e);
+        document.getElementById("ice-status").textContent = "Failed to save ICE config: " + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
