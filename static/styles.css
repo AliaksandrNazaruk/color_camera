@@ -1,0 +1,287 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #111;
+  }
+  
+  #media {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: #000;
+  }
+  
+  #video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: #000;
+  }
+  
+  #play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    font-size: 50px;
+    color: #000;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #play-btn:hover {
+    transform: translate(-50%, -50%) scale(1.05);
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  #play-btn:active {
+    transform: translate(-50%, -50%) scale(0.95);
+    transition: transform 0.1s;
+  }
+  
+  #play-btn:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+  }
+  
+  #play-btn:disabled:hover {
+    transform: translate(-50%, -50%) scale(1) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+  }
+  
+  /* Progress bar for connection */
+  #connection-progress {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 11;
+    width: 120px;
+    height: 120px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  #connection-progress.show {
+    opacity: 1;
+  }
+  
+  .progress-ring {
+    width: 120px;
+    height: 120px;
+    transform: rotate(-90deg);
+  }
+  
+  .progress-ring-circle {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.9);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 377;
+    stroke-dashoffset: 377;
+    transition: stroke-dashoffset 0.3s ease;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+  }
+  
+  .progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+  }
+
+  #spinner {
+    display: none;
+    position: absolute;
+    z-index: 11;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .loader {
+    width: 60px;
+    height: 60px;
+    border: 6px solid #333;
+    border-top: 6px solid #41bdf4;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin { 100% { transform: rotate(360deg);} }
+  
+  .crosshair {
+    position: absolute;
+    z-index: 20;
+    pointer-events: none;
+    background: #41bdf4;
+    opacity: 0.7;
+  }
+  #line-x { height: 2px; width: 100%; top: 50%; }
+  #line-y { width: 2px; height: 100%; left: 50%; }
+  
+  #depth-label {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 25;
+    font-size: 2em;
+    color: #41bdf4;
+    background: rgba(0,0,0,0.7);
+    padding: 0.2em 0.8em;
+    border-radius: 0.4em;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  #depth-label.show { opacity: 1; }
+  
+  #settings-toggle {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 35;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    color: #fff;
+  }
+  
+  #connection-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 35;
+    display: flex;
+    gap: 6px;
+  }
+  
+  .control-btn {
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .control-btn:hover {
+    background: rgba(0,0,0,0.85);
+    color: #41bdf4;
+  }
+  
+  #settings-panel {
+    position: absolute;
+    top: 60px;
+    left: 12px;
+    z-index: 30;
+    background: rgba(0,0,0,0.9);
+    color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    width: 300px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  #settings-panel.hidden {
+    display: none;
+  }
+  #settings-panel h3 {
+    margin: 0 0 6px;
+    font-size: 14px;
+  }
+  #settings-panel .row {
+    margin: 6px 0;
+  }
+  #settings-panel textarea,
+  #settings-panel input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 12px;
+    box-sizing: border-box;
+  }
+  
+  #settings-panel textarea:focus,
+  #settings-panel input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  #settings-panel textarea::placeholder,
+  #settings-panel input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+  }
+  #settings-panel .actions {
+    margin-top: 8px;
+    text-align: right;
+  }
+  #settings-panel button {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
+    transition: all 0.2s ease;
+  }
+  
+  #settings-panel button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  #settings-panel input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+  }
+  
+  #settings-panel label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  #ice-status {
+    margin-top: 10px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
