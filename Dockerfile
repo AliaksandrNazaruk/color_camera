@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     pkg-config \
     cmake \
+    curl \
     git \
     ffmpeg \
     v4l-utils \
@@ -35,13 +36,14 @@ RUN git clone https://github.com/IntelRealSense/librealsense.git && \
         -DCMAKE_BUILD_TYPE=Release && \
     make -j$(nproc) && \
     make install && \
-    ldconfig
+    ldconfig && \
+    cd / && rm -rf /librealsense
 
 # --- Python requirements (after librealsense is built) ---
 COPY requirements.txt .
 RUN pip install --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt && \
-    python3 -c "import pyrealsense2; print('pyrealsense2 version:', pyrealsense2.__version__ if hasattr(pyrealsense2, '__version__') else 'installed')"
+    python3 -c "import pyrealsense2; print('pyrealsense2 version:', getattr(pyrealsense2, '__version__', 'installed'))"
 
 # --- Копируем код сервиса ---
 WORKDIR /app
